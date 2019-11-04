@@ -4,11 +4,6 @@ from nltk.stem.snowball import SnowballStemmer
 import re
 
 
-def tokenize(utterance):
-    pattern = re.compile(r"(?u)\b\w\w+\b")
-    return pattern.findall(utterance)
-
-
 def structural_features(convs):
     stops = nltk.corpus.stopwords.words('english')
     stemmer = SnowballStemmer("english")
@@ -22,7 +17,8 @@ def structural_features(convs):
     
     for conv in convs:
         abs_feature += [i for i in range(len(conv))]
-        norm_feature += [i/len(conv) for i in range(len(conv))]
+        frac = 1/len(conv)
+        norm_feature += [i*frac for i in range(len(conv))]
         
         ut_len = []
         is_starter = []
@@ -32,7 +28,7 @@ def structural_features(convs):
         for utterance in conv:
             starter = utterance[0]
             ut = utterance[1]
-            tokens = tokenize(ut)
+            tokens = nltk.word_tokenize(ut)
             rem_stops = [token for token in tokens if not token in stops]
             ut_len.append(len(tokens))
             uniq_ut.append(len(rem_stops))
