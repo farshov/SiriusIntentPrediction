@@ -10,17 +10,19 @@ class Content:
 
     def fit_transform(self, dialogues):
         """
-        :param dialogues: list of lists of strs
+        :param dialogues: list of lists of tuple(sender, strs)
         :return: pd.DataFrame
         """
-        self.vectorizer.fit(np.array(dialogues).flatten())
+        dialogues_tr = [[phrase[1] for phrase in dialog] for dialog in dialogues]
+        self.vectorizer.fit(np.array(dialogues_tr).flatten())
         return self.transform(dialogues)
 
     def transform(self, dialogues):
         """
-        :param dialogues: list of lists of strs
+        :param dialogues: list of lists of tuple(sender, strs)
         :return: pd.DataFrame
         """
+        dialogues = [[phrase[1] for phrase in dialog] for dialog in dialogues]
         features = []
         for i, dialog in enumerate(dialogues):
             dialog = self.vectorizer.transform(dialog)
