@@ -1,4 +1,5 @@
 # SiriusIntentPrediction
+Python3 used <br>
 Project on replication of paper entitled User Intent Prediction in Information-seeking Conversations <br>
 Requirements: <br>
 nltk version 3.4.5 <br>
