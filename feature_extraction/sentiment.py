@@ -1,9 +1,10 @@
 import pandas as pd
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import opinion_lexicon
+from feature_extraction.feature_extractor import FeatureExtractor
 
 
-class Sentiment:
+class Sentiment(FeatureExtractor):
     """
     Extractor of sentimental features of a dataset.
     """
@@ -61,7 +62,7 @@ class Sentiment:
                 num_positive_words += 1
         return [num_positive_words, num_negative_words]
 
-    def corpus_extract_sentimental_features(self, data):
+    def extract_features(self, data, normalized_data):
 
         """
 
@@ -74,7 +75,7 @@ class Sentiment:
                            'sentiment_neg': [], 'sentiment_neu': [], 'sentiment_pos': [], 'num_positive_lexicon': [],
                            'num_negative_lexicon': []})
 
-        for dialogue in data:
+        for dialogue in normalized_data:
             for utterance in dialogue:
                 thank = self.utterance_contains_thank(utterance)
                 exclamation_mark = self.utterance_contains_excl_mark(utterance)
