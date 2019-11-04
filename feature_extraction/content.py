@@ -48,7 +48,7 @@ class Content:
                    'who': 5}
 
         labels = [0] * len(mapping)
-        phrase = set(phrase.lower().split())
+        phrase = set(phrase.split())
         for word in mapping:
             if word in phrase:
                 labels[mapping[word]] = 1
