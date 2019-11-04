@@ -9,6 +9,8 @@
 \f0\fs24 \cf2 \expnd0\expndtw0\kerning0
 # Byte-compiled / optimized / DLL files\
 **/idea\
+data/\
+DataStuff.ipynb\
 __pycache__/\
 *.py[cod]\
 *$py.class\
