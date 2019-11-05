@@ -14,7 +14,8 @@ class Sentiment(FeatureExtractor):
         self.negative_lexicon = opinion_lexicon.negative()
         self.positive_lexicon = opinion_lexicon.positive()
 
-    def utterance_contains_thank(self, utterance: str) -> bool:
+    @staticmethod
+    def utterance_contains_thank(utterance: str) -> bool:
         """
 
         :param utterance: utterance from a dialogue
@@ -22,7 +23,8 @@ class Sentiment(FeatureExtractor):
         """
         return "thank" in utterance
 
-    def utterance_contains_excl_mark(self, utterance: str) -> bool:
+    @staticmethod
+    def utterance_contains_excl_mark(utterance: str) -> bool:
         """
 
         :param utterance: utterance from a dialogue
@@ -30,19 +32,24 @@ class Sentiment(FeatureExtractor):
         """
         return '!' in utterance
 
-    def utterance_is_feedback(self, utterance) -> bool:
+    @staticmethod
+    def utterance_is_feedback(utterance) -> bool:
         """
 
         :param utterance: utterance from a dialogue
-        :return: Does the utterance contain the keyword did not, does not
+        :return: Does the utterance contain the keyword "did not", "does not"
         """
-        return "does not" in utterance or "did not" in utterance
+        return "does not" in utterance or "did not" in utterance \
+               or "doesn't" in utterance or "didn't" in utterance
 
     def utterance_compute_sentiment_scores(self, utterance) -> [float]:
         """
 
         :param utterance: utterance from a dialogue
-        :return:  Sentiment scores of the utterance computed by VADER [8] (negative, neutral, and positive)
+        :return: Sentiment scores of the utterance computed by VADER
+        [C. J. Hutto and E. Gilbert. VADER: A Parsimonious Rule-Based Model
+         for Sentiment Analysis of Social Media Text. In ICWSM ’14, 2014]
+          (negative, neutral, and positive)
         """
         scores = self.sentiment_analyzer.polarity_scores(utterance)
         return [scores["neg"], scores["neu"], scores["pos"]]
@@ -63,7 +70,6 @@ class Sentiment(FeatureExtractor):
         return [num_positive_words, num_negative_words]
 
     def extract_features(self, data, normalized_data):
-
         """
 
         :param data: list of lists, containing dialogues with utterances
