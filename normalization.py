@@ -2,9 +2,8 @@ import nltk
 from nltk.stem.snowball import SnowballStemmer
 
 
-def normilize(convs):
+def normalize(convs):
     """
-
     :param convs: list of lists of tuple(sender, message)
     :return: list of lists of tuple(sender, norm_message)
     """
@@ -13,8 +12,8 @@ def normilize(convs):
 
     convs_norm = []
     for conv in convs:
-
         clean_conv = []
+
         for utterance in conv:
             starter = utterance[0]
             utter = utterance[1]
