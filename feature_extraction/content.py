@@ -34,7 +34,8 @@ class Content:
                                                    'when', 'why', 'who'])
         return features
 
-    def get5w1h(self, phrase):
+    @staticmethod
+    def get5w1h(phrase):
         """
         :param phrase: str
         :return: array with labels of interrogative words
