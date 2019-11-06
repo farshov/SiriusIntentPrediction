@@ -20,6 +20,10 @@ def get_convs(path):
 
 
 def get_labels(data):
+    """
+    :param data: pandas DataFrame which contains labels in column 'tags', appropriate messages in column 'utterances'
+    :return: set of 33 most common labels for our model
+    """
     useless = {'JK', 'GG', 'O'}
     combinations = []
     for i in range(len(data)):
@@ -40,6 +44,13 @@ def get_labels(data):
 
 
 def generate_dataset(data, labels):
+    """
+
+    :param data: pandas DataFrame which contains labels in column 'tags', appropriate messages in column 'utterances'
+    :param labels: set of 33 most common labels for our model
+    :return: X - list of lists of tuple(sender, str with message),
+            y - list of lists of strs which are label of appropriate message
+    """
     dialogs = []
     targets = []
     labels_set = set(labels)
@@ -62,6 +73,13 @@ def generate_dataset(data, labels):
 
 
 def load_from_json(path='data/msdialogue/MSDialog-Intent.json', seed=42):
+    """
+
+    :param path: path to data file
+    :param seed: random seed for transforming rare labels
+    :return: X - list of lists of tuple(sender, str with message),
+            y - list of lists of strs which are label of appropriate message
+    """
     data = pd.read_json(path, orient='index')
 
     # getting useful combinations
