@@ -1,12 +1,15 @@
-from normalization import normalize
+import string
 
 
 class FeatureExtractor:
-    def corpus_extract_features(self, data, normalized_data=None):
-        if not normalized_data:
-            normalized_data = normalize(data)
-        self.corpus_extract_features(data, normalized_data)
+    def __init__(self):
+        self.table = str.maketrans('', '', string.punctuation)
 
-    def extract_features(self, data, normalized_data):
+    def extract_features(self, data):
+        """
+        Extracts features from data.
+        :param data: list of lists of tuple(sender, strs), containing dialogues with utterances
+        :return: pandas DataFrame with features
+        """
         pass
 
