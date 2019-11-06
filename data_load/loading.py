@@ -1,4 +1,6 @@
 import pandas as pd
+from collections import Counter
+import random
 
 def get_convs(path):
     df = pd.read_csv(path)
@@ -15,3 +17,57 @@ def get_convs(path):
         i += 1
 
     return convs
+
+
+def get_labels(data):
+    useless = {'JK', 'GG', 'O'}
+    combinations = []
+    for i in range(len(data)):
+        d = data.iloc[i]['utterances']
+        for utt in d:
+            comb = set(utt['tags'].split())
+            if len(comb) > 1:
+                inter = comb.intersection(useless)
+                if len(inter) < len(comb):
+                    for to_del in inter:
+                        comb.remove(to_del)
+                comb = sorted(list(comb))
+            combinations.append('_'.join(comb))
+
+    labels = Counter(combinations).most_common(32)
+    labels = [label[0] for label in labels] + ['O']
+    return set(labels)
+
+
+def generate_dataset(data, labels):
+    dialogs = []
+    targets = []
+    labels_set = set(labels)
+    for i in range(len(data)):
+        d = data.iloc[i]['utterances']
+        diag = []
+        target = []
+        for utt in d:
+            diag.append((utt['user_id'], utt['utterance']))
+            comb = sorted(utt['tags'].split())
+            if '_'.join(comb) in labels_set:
+                target.append('_'.join(comb))
+            else:
+                num = random.randint(0, len(comb) - 1)
+                target.append(comb[num])
+        targets.append(target)
+        dialogs.append(diag)
+
+    return dialogs, targets
+
+
+def load_from_json(path='data/msdialogue/MSDialog-Intent.json', seed=42):
+    data = pd.read_json(path, orient='index')
+
+    # getting useful combinations
+    random.seed(seed)
+    labels = get_labels(data)
+
+    X, y = generate_dataset(data, labels)
+
+    return X, y
