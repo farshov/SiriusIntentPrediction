@@ -36,12 +36,13 @@ class Vocab:
     def __len__(self):
         return self.n_words
 
-    def tokenize(self, corpus):
+    def tokenize(self, corpus, max_len):
         """
         :param corpus: list of strs containing sentenses
         :return:
         """
         tok_corp = []
+        tok_corp.append(torch.zeros(max_len))
         for sent in corpus:
             tok_sent = []
             for word in sent.split(' '):
