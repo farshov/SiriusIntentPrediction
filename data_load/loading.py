@@ -49,7 +49,7 @@ def generate_dataset(data, labels):
     :param data: pandas DataFrame which contains labels in column 'tags', appropriate messages in column 'utterances'
     :param labels: set of 33 most common labels for our model
     :return: X - list of lists of tuple(sender, str with message),
-            y - list of lists of strs which are label of appropriate message
+            y - list of strs which are label of appropriate message
     """
     dialogs = []
     targets = []
@@ -57,16 +57,14 @@ def generate_dataset(data, labels):
     for i in range(len(data)):
         d = data.iloc[i]['utterances']
         diag = []
-        target = []
         for utt in d:
             diag.append((utt['user_id'], utt['utterance']))
             comb = sorted(utt['tags'].split())
             if '_'.join(comb) in labels_set:
-                target.append('_'.join(comb))
+                targets.append('_'.join(comb))
             else:
                 num = random.randint(0, len(comb) - 1)
-                target.append(comb[num])
-        targets.append(target)
+                targets.append(comb[num])
         dialogs.append(diag)
 
     return dialogs, targets
@@ -78,7 +76,7 @@ def load_from_json(path='data/msdialogue/MSDialog-Intent.json', seed=42):
     :param path: path to data file
     :param seed: random seed for transforming rare labels
     :return: X - list of lists of tuple(sender, str with message),
-            y - list of lists of strs which are label of appropriate message
+            y - list of strs which are label of appropriate message
     """
     data = pd.read_json(path, orient='index')
 
