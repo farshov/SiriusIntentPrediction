@@ -1,11 +1,11 @@
 import torch.nn as nn
 from models.layers import ConvBlock, TransposeChannels, GlobalMaxPool
 
-class BaseCNN(nn.Module):
 
+class BaseCNN(nn.Module):
     def __init__(self, vocab, n_conv_units=1024, p_dropout=0.6, filter_size=3,
-                 pool_size=3, max_len=800, emb_dim=100, n_classes=12, dense_layer_units=256):
-        super(self, BaseCNN).__init__()
+                 pool_size=3, emb_dim=100, n_classes=12, dense_layer_units=256):
+        super(BaseCNN, self).__init__()
 
         # input_size: (batch, seq)
         self.embedder = nn.Embedding(len(vocab), emb_dim, padding_idx=vocab.get_pad())
