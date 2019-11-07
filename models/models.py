@@ -1,33 +1,39 @@
-import torch
 import torch.nn as nn
+from models.layers import ConvBlock, TransposeChannels, GlobalMaxPool
 
 
 class BaseCNN(nn.Module):
-
     def __init__(self, vocab, n_conv_units=1024, p_dropout=0.6, filter_size=3,
-                 pool_size=3, max_len=800, dim=300, n_classes=12):
-        super(self, BaseCNN).__init__()
-        self.n_conv_units = n_conv_units
-        self.p_dropout = p_dropout
-        self.filter_size = filter_size
-        self.pool_size = pool_size
-        self.max_len = max_len
-        self.embedder = nn.Embedding(len(vocab), dim)
+                 pool_size=3, emb_dim=100, n_classes=12, dense_layer_units=256):
+        super(BaseCNN, self).__init__()
+
+        # input_size: (batch, seq)
+        self.embedder = nn.Embedding(len(vocab), emb_dim, padding_idx=vocab.get_pad())
+        # embedded_input_size: (batch, seq, 100)
         self.model = nn.Sequential(
-            nn.Conv1d(in_channels=dim, out_channels=n_conv_units, kernel_size=filter_size),
-            nn.MaxPool1d(kernel_size=pool_size, padding=1),
-            nn.Dropout(p=p_dropout)
-            nn.Conv1d(in_channels=n_conv_units, out_channels=n_conv_units, kernel_size=filter_size),
-            nn.MaxPool1d(kernel_size=pool_size, padding=1),
-            nn.Dropout(p=p_dropout),
-            nn.Conv1d(in_channels=n_conv_units, out_channels=n_conv_units, kernel_size=filter_size),
-            nn.MaxPool1d(kernel_size=pool_size, padding=1),
-            nn.Dropout(p=p_dropout),
-            nn.Linear(???),
+            # (batch, 800, 100)
+            TransposeChannels(),
+            # (batch, 100, 800)
+            ConvBlock(emb_dim, n_conv_units, p_dropout, filter_size, pool_size),
+            # (batch, 1024, 268)
+            ConvBlock(n_conv_units, n_conv_units, p_dropout, filter_size, pool_size),
+            # (batch, 1024, ?????)
+            nn.Conv1d(n_conv_units, n_conv_units, filter_size),
+            # (batch, 1024, ?????)
             nn.ReLU(),
-            nn.Linear(out_features=n_classes),
+            GlobalMaxPool(dim=2),
+            # (batch, 1024)
+            nn.Linear(in_features=n_conv_units, out_features=dense_layer_units),
+            nn.ReLU(),
+            # (batch, 256)
+            nn.Linear(in_features=dense_layer_units, out_features=n_classes),
             nn.Sigmoid()
+            # (batch, 12)
         )
 
     def forward(self, seq):
-
+        """
+        :param seq: tensor of tokens idxs (batch_size, seq_len)
+        :return: probs: tensor of probabilities (batch_size, n_classes(originally 12))
+        """
+        return self.model(self.embedder(seq))

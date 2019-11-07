@@ -2,13 +2,12 @@ import pandas as pd
 import nltk.data
 from gensim.models import Word2Vec
 import string
-import nltk.data
 import random
 from tqdm import tqdm
 
 
 def train_word2vec(path='data/msdialogue/MSDialog-Complete.json', save_path='PreTrainedWord2Vec',
-                   size=100, window=5, min_count=10, iter=20, seed=42):
+                   size=100, window=5, min_count=10, epochs=10, seed=42):
     """
 
     :param path: Dataset for training an embedding
@@ -36,7 +35,5 @@ def train_word2vec(path='data/msdialogue/MSDialog-Complete.json', save_path='Pre
                     sent[random.randint(0, len(sent) - 1)] = 'UNK'
                 text.append(sent)
 
-    model = Word2Vec(text, size=size, window=window, min_count=min_count, iter=iter, seed=seed, workers=-1)
+    model = Word2Vec(text, size=size, window=window, min_count=min_count, iter=epochs, seed=seed, workers=-1)
     model.wv.save_word2vec_format(save_path)
-
-    return None
