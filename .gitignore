@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
 **/idea\
-data\
+data/
 DataStuff.ipynb\
 __pycache__/
 *.py[cod]
@@ -26,6 +26,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+**/.DS_Store
 MANIFEST
 
 # PyInstaller
