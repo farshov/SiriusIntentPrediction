@@ -2,6 +2,7 @@ import pandas as pd
 from collections import Counter
 import random
 
+
 def get_convs(path):
     df = pd.read_csv(path)
     dialog_ids = df["dialogueID"].unique()
@@ -70,7 +71,7 @@ def generate_dataset(data, labels):
     return dialogs, targets
 
 
-def load_from_json(path='data/msdialogue/MSDialog-Intent.json', seed=42):
+def load_from_json(path='../data/msdialogue/MSDialog-Intent.json', seed=42):
     """
 
     :param path: path to data file
