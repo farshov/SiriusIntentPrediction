@@ -1,6 +1,5 @@
 import torch.nn as nn
-from layers import ConvBlock, TransposeChannels, GlobalMaxPool
-
+from models.layers import ConvBlock, TransposeChannels, GlobalMaxPool
 
 class BaseCNN(nn.Module):
 
