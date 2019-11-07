@@ -119,7 +119,7 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
                 output = model(X)
                 loss = criterion(output, y.to(torch.float32))
                 losses.append(float(loss.cpu()))
-                if all(x < treshold for x in (output > treshold)):
+                if all(x == 0 for x in (output > treshold)):
                     output = output.cpu().numpy()
                     output = output.max(axis=1, keepdims=1) == output
                 else:
