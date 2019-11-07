@@ -60,15 +60,15 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
     tokenizer = Vocab()
     tokenizer.build(word2vec)
 
-    X_train = pd.DataFrame.from_csv(data_path+"train.tsv", sep="\t", header=None, index_col=None)
+    X_train = pd.read_csv(data_path+"train.tsv", sep="\t", header=None, index_col=None)
     y_train = encode_label(X_train[0].to_numpy())
     X_train = tokenizer.tokenize(X_train[1].to_numpy(), max_len=MAX_SEQ_LEN)
 
-    X_val = pd.DataFrame.from_csv(data_path + "valid.tsv", sep="\t", header=None, index_col=None)
+    X_val = pd.read_csv(data_path + "valid.tsv", sep="\t", header=None, index_col=None)
     y_val = encode_label(X_val[0].to_numpy())
     X_val = tokenizer.tokenize(X_val[1].to_numpy(), max_len=MAX_SEQ_LEN)
 
-    X_test = pd.DataFrame.from_csv(data_path + "test.tsv", sep="\t", header=None, index_col=None)
+    X_test = pd.read_csv(data_path + "test.tsv", sep="\t", header=None, index_col=None)
     y_test = encode_label(X_test[0].to_numpy())
     X_test = tokenizer.tokenize(X_test[1].to_numpy(), max_len=MAX_SEQ_LEN)
 
@@ -116,7 +116,7 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
                 X, y = X.to(device), y.to(device)
 
                 output = model(X)
-                loss = criterion(output, y)
+                loss = criterion(output, y.to(torch.float32))
                 losses.append(float(loss))
                 output = (output > 0.5).numpy()
                 f1_scores.append(get_f1(y, output))
