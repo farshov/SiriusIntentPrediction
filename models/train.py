@@ -117,8 +117,8 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
 
                 output = model(X)
                 loss = criterion(output, y.to(torch.float32))
-                losses.append(float(loss))
-                output = (output > 0.5).numpy()
+                losses.append(float(loss.cpu()))
+                output = (output > 0.5).cpu().numpy()
                 f1_scores.append(get_f1(y, output))
                 f1_scores.append(get_accuracy(y, output))
 
