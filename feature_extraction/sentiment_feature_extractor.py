@@ -3,6 +3,8 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import opinion_lexicon
 from feature_extraction.feature_extractor import FeatureExtractor
+from threading import Thread
+import multiprocessing
 import ssl
 
 try:
@@ -80,6 +82,17 @@ class Sentiment(FeatureExtractor):
                 num_positive_words += 1
         return [num_positive_words, num_negative_words]
 
+    def get_utterance_info(self, df, idx, sender_utterance):
+        utterance = sender_utterance[1].split()
+        preprocessed_utterance = sender_utterance[1].translate(self.table).lower().split()
+        thank = self.utterance_contains_thank(preprocessed_utterance)
+        exclamation_mark = self.utterance_contains_excl_mark(utterance)
+        feedback = self.utterance_is_feedback(preprocessed_utterance)
+        sentiment_neg, sentiment_neu, sentiment_pos = self.utterance_compute_sentiment_scores(preprocessed_utterance)
+        num_positive_lexicon, num_negative_lexicon = self.utterance_count_opinion_lexicon(preprocessed_utterance)
+        df.loc[idx, :] = [thank, exclamation_mark, feedback, sentiment_neg, sentiment_neu, sentiment_pos,
+                          num_positive_lexicon, num_negative_lexicon]
+
     def extract_features(self, data):
         """
 
@@ -87,26 +100,23 @@ class Sentiment(FeatureExtractor):
         :return: pandas DataFrame with sentimental features respecting to the utterance id:
                    | thank | exclamation_mark | feedback | sentiment_scores | opinion_lexicon |
         """
+        data = [item for sublist in data for item in sublist]
+        data = list(enumerate(data))
+        num_utter = len(data)
+        df = pd.DataFrame({'thank': [0]*num_utter, 'exclamation_mark': [0]*num_utter, 'feedback': [0]*num_utter,
+                           'sentiment_neg': [0]*num_utter, 'sentiment_neu': [0]*num_utter,
+                           'sentiment_pos': [0]*num_utter, 'num_positive_lexicon': [0]*num_utter,
+                           'num_negative_lexicon': [0]*num_utter})
 
-        df = pd.DataFrame({'thank': [], 'exclamation_mark': [], 'feedback': [],
-                           'sentiment_neg': [], 'sentiment_neu': [], 'sentiment_pos': [], 'num_positive_lexicon': [],
-                           'num_negative_lexicon': []})
-
-        for dialogue in data:
-            for sender_utterance in dialogue:
-                utterance = sender_utterance[1].split()
-                preprocessed_utterance = sender_utterance[1].translate(self.table).lower().split()
-                thank = self.utterance_contains_thank(preprocessed_utterance)
-                exclamation_mark = self.utterance_contains_excl_mark(utterance)
-                feedback = self.utterance_is_feedback(preprocessed_utterance)
-                sentiment_neg, sentiment_neu, sentiment_pos = self.utterance_compute_sentiment_scores(preprocessed_utterance)
-                num_positive_lexicon, num_negative_lexicon = self.utterance_count_opinion_lexicon(preprocessed_utterance)
-                utterance_info = pd.DataFrame({'thank': [thank], 'exclamation_mark': [exclamation_mark],
-                                               'feedback': [feedback], 'sentiment_neg': [sentiment_neg],
-                                               'sentiment_neu': [sentiment_neu], 'sentiment_pos': [sentiment_pos],
-                                               'num_positive_lexicon': [num_positive_lexicon],
-                                               'num_negative_lexicon': [num_negative_lexicon]})
-                df = df.append(utterance_info, ignore_index=True)
+        max_threads = multiprocessing.cpu_count()
+        threads = []
+        for idx, sender_utterance in data:
+            process = Thread(target=self.get_utterance_info, args=[df, idx, sender_utterance])
+            threads.append(process)
+            if len(threads) == max_threads:
+                for process in threads:
+                    process.join()
+                threads = []
 
         return df
 
