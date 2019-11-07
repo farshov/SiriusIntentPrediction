@@ -90,13 +90,14 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
     # 4) Model, criterion and optimizer
     model = BaseCNN(word2vec, tokenizer.get_pad()).to(device)
     optimizer = Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
-    criterion = nn.MultiLabelSoftMarginLoss()
     # 5) training process
 
     for ep in tqdm(range(N_EPOCHS)):
         print(f'epoch: {ep}')
         i = 0
+        model.train() 
         for X, y in training:
+            criterion = nn.MultiLabelSoftMarginLoss()
             optimizer.zero_grad()
             X, y = X.to(device), y.to(device)
             output = model(X)
@@ -107,27 +108,37 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
             print(f'iter: {i}, loss: {loss}')
             i += 1
 
-        with torch.set_grad_enabled(False):
+        with torch.no_grad():
+            model.eval()
             print('EVALUATION________')
             losses = []
             f1_scores = []
+            precisions = []
+            recalls = []
             accuracies = []
             for X, y in tqdm(validation):
+                criterion = nn.MultiLabelSoftMarginLoss()
                 treshold = 0.5
                 X, y = X.to(device), y.to(device)
 
                 output = model(X)
                 loss = criterion(output, y.to(torch.float32))
                 losses.append(float(loss.cpu()))
-                if all(x == 0 for x in (output > treshold)):
-                    output = output.cpu().numpy()
-                    output = output.max(axis=1, keepdims=1) == output
-                else:
-                    output = (output > 0.5).cpu().numpy()
-                f1_scores.append(get_f1(y, output))
-                f1_scores.append(get_accuracy(y, output))
-
-            print(f'VAL: loss={np.mean(losses)}, f1-score={np.mean(f1_scores)}, accuracy={np.mean(accuracies)}')
+                output = output.cpu().numpy()
+                for i in range(len(output)):
+                    pred = output[i] > treshold
+                    if sum(pred) == 0:
+                        pred = output[i].max(axis=0, keepdims=1) == output[i]
+                    output[i] = pred
+                precisions.append(get_f1(y, output)[0])
+                recalls.append(get_f1(y, output)[1])
+                f1_scores.append(get_f1(y, output)[2])
+                accuracies.append(get_accuracy(y, output))
+        
+            print(f1_scores)
+            print(f'VAL: loss={np.mean(losses)}')
+            print(f'f1-score={np.mean(f1_scores)}')
+            print(f'accuracy={np.mean(accuracies)}')
             print('__________________')
 
     # 5) test evaluation process
