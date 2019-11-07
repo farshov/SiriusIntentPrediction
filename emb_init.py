@@ -5,6 +5,8 @@ import string
 import random
 from tqdm import tqdm
 
+MAX_SEQ_LEN = 150
+
 
 def train_word2vec(path='data/msdialogue/MSDialog-Complete.json', save_path='PreTrainedWord2Vec',
                    size=100, window=5, min_count=10, epochs=10, seed=42):
@@ -23,15 +25,15 @@ def train_word2vec(path='data/msdialogue/MSDialog-Complete.json', save_path='Pre
 
     text = []
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
-    exclude = set(string.punctuation)
+    # exclude = set(string.punctuation)
     random.seed(seed)
     for i in tqdm(range(len(data))):
         dialog = data.iloc[i]['utterances']
         for j in range(len(dialog)):
             sentences = tokenizer.tokenize(dialog[j]['utterance'].lower())
             for sent in sentences:
-                sent = ''.join(ch for ch in sent if ch not in exclude and not ch.isdigit()).split()
-                if sent and not i % 25:
+                sent = ''.join(sent).split()  # ch for ch in sent if ch not in exclude and not ch.isdigit()).split()
+                if sent and not i % 20:
                     sent[random.randint(0, len(sent) - 1)] = 'UNK'
                 text.append(sent)
 

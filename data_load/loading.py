@@ -1,22 +1,7 @@
 import pandas as pd
 from collections import Counter
 import random
-
-def get_convs(path):
-    df = pd.read_csv(path)
-    dialog_ids = df["dialogueID"].unique()
-    starters = {}
-    for i in range(len(df)):
-        if not df["dialogueID"][i] in starters:
-            starters[df["dialogueID"][i]] = df["from"][i]
-    convs = [0] * len(dialog_ids)
-    i = 0
-    for dialog_id in dialog_ids:
-        convs[i] = list(zip(df[df["dialogueID"] == dialog_id]["from"].tolist(),
-                    df[df["dialogueID"] == dialog_id]["text"].tolist()))
-        i += 1
-
-    return convs
+num_tags = 12
 
 
 def get_labels(data):
@@ -45,7 +30,6 @@ def get_labels(data):
 
 def generate_dataset(data, labels):
     """
-
     :param data: pandas DataFrame which contains labels in column 'tags', appropriate messages in column 'utterances'
     :param labels: set of 33 most common labels for our model
     :return: X - list of lists of tuple(sender, str with message),
@@ -70,9 +54,8 @@ def generate_dataset(data, labels):
     return dialogs, targets
 
 
-def load_from_json(path='data/msdialogue/MSDialog-Intent.json', seed=42):
+def load_from_json(path='../data/msdialogue/MSDialog-Intent.json', seed=42):
     """
-
     :param path: path to data file
     :param seed: random seed for transforming rare labels
     :return: X - list of lists of tuple(sender, str with message),
@@ -87,3 +70,44 @@ def load_from_json(path='data/msdialogue/MSDialog-Intent.json', seed=42):
     X, y = generate_dataset(data, labels)
 
     return X, y
+
+
+def encode_labels(all_labels, label_dict):
+
+    """
+    params:
+    string labels for encoding
+    dict {(label, index)}
+    
+    return: indices
+    """
+
+    res = []
+    for labels in all_labels:
+        encode = labels.split('_')
+        i = 0
+        for label in encode:
+            encode[i] = label_dict[label] 
+            i += 1
+        res += [encode]
+    return res
+
+
+def preprocess_labels(labels, labels_dict):
+
+    """
+    params:
+    list of list of string labels
+    dict {(label, index)}
+    return:
+    vector where i-th element is 1 when i-th list contains element i
+    """
+
+    res = []
+    encode = encode_labels(labels, labels_dict)
+    for line in encode:
+        vector = [0]*num_tags
+        for num in line:
+            vector[num] = 1
+        res.append(vector)
+    return res
