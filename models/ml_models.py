@@ -22,23 +22,22 @@ class MLModels:
         return models
 
     def test_basic_model_multilabel(self, x_train, y_train, x_test, y_test):
-        models = self.fit_models(x_train, y_train[:,0])
-        models_x_test = []
+        models = self.fit_models(x_train, np.array(y_train)[:,0])
         models_acc = []
         models_f1 = []
-        for i in range(len(models)):
-            models_x_test.append(x_test)
+        preds = np.zeros(shape=(len(models), len(y_test[0]), len(y_test)))
 
-        for label_idx in y_test.shape[1]:
+        for label_idx in range(len(y_test[0])):
             for i, model in enumerate(models):
-                y_pred = model.predict(models_x_test[i])
-                models_x_test[i]["label_"+str(label_idx)] = y_pred
-            if label_idx + 1 < y_test.shape[1]:
-                x_train["label_"+str(label_idx + 1)] = y_train[:, label_idx]
-                models = self.fit_models(x_train, y_train[:, label_idx + 1])
+                y_pred = model.predict(x_test)
+                preds[i][label_idx] = y_pred
+            if label_idx + 1 < len(y_test[0]):
+                x_train["label_"+str(label_idx + 1)] = np.array(y_train)[:, label_idx]
+                x_test["label_"+str(label_idx + 1)] = y_pred
+                models = self.fit_models(x_train, np.array(y_train)[:, label_idx + 1])
 
-        for model_pred in models_x_test:
-            predictions = model_pred[:, len(model_pred.columns)-len(y_test.columns)]
+        for i, model in enumerate(models):
+            predictions = [preds[i][:,j] for j in range(len(preds[i][0]))]
             acc = qm.get_accuracy(y_test, predictions)
             f1 = qm.get_f1(y_test, predictions)
             models_acc.append(acc)
