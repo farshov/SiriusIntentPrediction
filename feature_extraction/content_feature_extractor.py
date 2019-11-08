@@ -44,7 +44,7 @@ class Content(FeatureExtractor):
 
     @staticmethod
     def contains_question_mark(phrase):
-        return 0 if '?' in phrase else 1
+        return 1 if '?' in phrase else 0
 
     def duplicate(self, phrase):
         """
