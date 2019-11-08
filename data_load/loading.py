@@ -44,6 +44,8 @@ def generate_dataset(data, labels):
         for utt in d:
             diag.append((utt['user_id'], utt['utterance']))
             comb = sorted(utt['tags'].split())
+            if 'GG' in comb and len(comb) > 1:
+                comb.remove('GG')
             if '_'.join(comb) in labels_set:
                 targets.append('_'.join(comb))
             else:
