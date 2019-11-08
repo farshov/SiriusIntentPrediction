@@ -22,7 +22,7 @@ sys.path.insert(0, parent_dir)
 
 from data_load.loading import load_from_json
 
-MAX_SEQ_LEN = 800
+MAX_SEQ_LEN = 300
 N_EPOCHS = 100
 
 
