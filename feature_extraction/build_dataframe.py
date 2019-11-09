@@ -5,14 +5,14 @@ from data_load.loading import load_from_json
 import pandas as pd
 
 
-def build_and_write_dataset():
-    X, y = load_from_json()
+def build_and_write_dataset(path='data/msdialogue/MSDialog-Intent.json', out_path='out.csv'):
+    X, y = load_from_json(path)
     content_features = Content()
     structural_features = Structural()
     sentiment_features = Sentiment()
-    df3 = sentiment_features.extract_features(X)
     df1 = content_features.extract_features(X)
     df2 = structural_features.extract_features(X)
+    df3 = sentiment_features.extract_features(X)
     df = pd.concat([df1, df2], axis=1)
     df = pd.concat([df, df3], axis=1)
-    df.to_csv('out.csv', index=False)
+    df.to_csv(out_path, index=False)

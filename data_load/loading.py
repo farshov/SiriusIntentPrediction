@@ -56,7 +56,7 @@ def generate_dataset(data, labels):
     return dialogs, targets
 
 
-def load_from_json(path='../data/msdialogue/MSDialog-Intent.json', seed=42):
+def load_from_json(path='data/msdialogue/MSDialog-Intent.json', seed=42):
     """
     :param path: path to data file
     :param seed: random seed for transforming rare labels
@@ -72,6 +72,10 @@ def load_from_json(path='../data/msdialogue/MSDialog-Intent.json', seed=42):
     X, y = generate_dataset(data, labels)
 
     return X, y
+
+
+def load_from_csv(path='data/msdialogue/out.csv'):
+    return pd.read_csv(path)
 
 
 def encode_labels(all_labels, label_dict):
