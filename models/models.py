@@ -12,6 +12,8 @@ class BaseCNN(nn.Module):
         weights = torch.FloatTensor(pretr_emb.vectors)
         self.embedder = nn.Embedding.from_pretrained(weights)
         self.embedder.padding_idx = pad_idx
+#         for param in self.embedder.parameters():
+#             param.requires_grad = False
         # embedded_input_size: (batch, seq, 100)
         self.model = nn.Sequential(
             # (batch, 800, 100)

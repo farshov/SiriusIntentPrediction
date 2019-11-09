@@ -15,18 +15,19 @@ import numpy as np
 from quality_metrics.quality_metrics import get_accuracy, get_f1
 
 import os, sys, inspect
-current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
+# current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# parent_dir = os.path.dirname(current_dir)
+# sys.path.insert(0, parent_dir)
 
 
 from data_load.loading import load_from_json
 
-MAX_SEQ_LEN = 300
-N_EPOCHS = 100
+MAX_SEQ_LEN = 800
+N_EPOCHS = 30
+SAVE_PATH = 'BaseCNNmsdialog'
 
 
-def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
+def main(emb_path='GoogleNews-vectors-negative300.bin.gz', data_path='data/msdialogue/'):
     device = 'cpu'
     if torch.cuda.is_available():
         device = 'cuda'
@@ -55,11 +56,16 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
     # for i in range(len(X)):
     #     for j in range(len(X[i])):
     #         X_train.append(X[i][j])
-
-    word2vec = gensim.models.KeyedVectors.load_word2vec_format(emb_path)
+    
+    print('Building Embedding')
+    word2vec = gensim.models.KeyedVectors.load_word2vec_format(emb_path) # , binary=True)
+    EMB_DIM = word2vec.vectors.shape[1]
+    word2vec.add('<UNK>', np.mean(word2vec.vectors.astype('float32'), axis=0))
+    word2vec.add('<PAD>', np.array(np.zeros(EMB_DIM)))
     tokenizer = Vocab()
     tokenizer.build(word2vec)
-
+    
+    print('Loading Data')
     X_train = pd.read_csv(data_path+"train.tsv", sep="\t", header=None, index_col=None)
     y_train = encode_label(X_train[0].to_numpy())
     X_train = tokenizer.tokenize(X_train[1].to_numpy(), max_len=MAX_SEQ_LEN)
@@ -88,41 +94,72 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
     testing = data.DataLoader(MSDialog(X_test, y_test), **params)
 
     # 4) Model, criterion and optimizer
-    model = BaseCNN(word2vec, tokenizer.get_pad()).to(device)
+    model = BaseCNN(word2vec, tokenizer.get_pad(), emb_dim=EMB_DIM).to(device)
     optimizer = Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08)
+    criterion = nn.BCELoss()
     # 5) training process
-
-    for ep in tqdm(range(N_EPOCHS)):
+    treshold = 0.5
+    print('Train')
+#     for X, y in training:
+#         X, y = X.to(device), y.to(device)
+#         break
+    for ep in range(N_EPOCHS):
         print(f'epoch: {ep}')
-        i = 0
+#         j = 0
+#         # model.train() 
+#         losses = []
+#         for i in range(50):
+#             optimizer.zero_grad()
+            
+#             output = model(X)
+#             loss = torch.tensor(0.0).to(output)
+#             for i in range(output.shape[1]):
+#                 criterion = nn.BCELoss()
+#                 loss += criterion(output[:, i].unsqueeze(1), y[:, i].unsqueeze(1).to(torch.float32))
+#             losses.append(float(loss.cpu())/output.shape[1])
+#             loss.backward()
+#             optimizer.step()
+
+#             # print(f'iter: {j}, loss: {loss}')
+#             j += 1
+#         print(f'train loss={np.mean(losses)}')
+        
+        j = 0
         model.train() 
+        losses = []
         for X, y in training:
-            criterion = nn.MultiLabelSoftMarginLoss()
             optimizer.zero_grad()
             X, y = X.to(device), y.to(device)
             output = model(X)
-            loss = criterion(output, y.to(torch.float32))
+            loss = torch.tensor(0.0).to(output)
+            for i in range(output.shape[1]):
+                criterion = nn.BCELoss()
+                loss += criterion(output[:, i].unsqueeze(1), y[:, i].unsqueeze(1).to(torch.float32))
             loss.backward()
+            losses.append(float(loss.cpu()))
             optimizer.step()
 
-            print(f'iter: {i}, loss: {loss}')
-            i += 1
-
+            # print(f'iter: {j}, loss: {loss}')
+            j += 1
+        print(f'train loss={np.mean(losses)}')
         with torch.no_grad():
             model.eval()
-            print('EVALUATION________')
+            # print('EVALUATION________')
             losses = []
             f1_scores = []
             precisions = []
             recalls = []
             accuracies = []
-            for X, y in tqdm(validation):
+            for X, y in validation:
                 criterion = nn.MultiLabelSoftMarginLoss()
-                treshold = 0.5
+                
                 X, y = X.to(device), y.to(device)
 
                 output = model(X)
-                loss = criterion(output, y.to(torch.float32))
+                loss = torch.tensor(0.0).to(output)
+                for i in range(output.shape[1]):
+                    criterion = nn.BCELoss()
+                    loss += criterion(output[:, i].unsqueeze(1), y[:, i].unsqueeze(1).to(torch.float32))
                 losses.append(float(loss.cpu()))
                 output = output.cpu().numpy()
                 for i in range(len(output)):
@@ -134,13 +171,16 @@ def main(emb_path='PreTrainedWord2Vec', data_path='data/msdialogue/'):
                 recalls.append(get_f1(y, output)[1])
                 f1_scores.append(get_f1(y, output)[2])
                 accuracies.append(get_accuracy(y, output))
-        
-            print(f1_scores)
-            print(f'VAL: loss={np.mean(losses)}')
-            print(f'f1-score={np.mean(f1_scores)}')
+            
+            print('VAL:') 
+            print(f'val_loss={np.mean(losses)}')
             print(f'accuracy={np.mean(accuracies)}')
+            print(f'precision={np.mean(precisions)}')
+            print(f'recall={np.mean(recalls)}')
+            print(f'f1-score={np.mean(f1_scores)}')
+            
             print('__________________')
-
+    torch.save(model.state_dict(), SAVE_PATH)
     # 5) test evaluation process
 
 

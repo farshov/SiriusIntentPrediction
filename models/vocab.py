@@ -35,10 +35,10 @@ class Vocab:
         tok_corp.append(torch.zeros(max_len))
         for sent in corpus:
             tok_sent = []
-            for word in sent[1].split(' '):
-                tok_sent.append(self.word2index.get(word, self.word2index["UNK"]))
+            for word in sent.split(' '):
+                tok_sent.append(self.word2index.get(word, self.word2index["<UNK>"]))
             tok_corp.append(torch.tensor(tok_sent))
         return tok_corp
 
     def get_pad(self):
-        return self.word2index['UNK']
+        return self.word2index['<PAD>']
