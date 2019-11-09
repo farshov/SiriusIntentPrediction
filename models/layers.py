@@ -36,4 +36,4 @@ class GlobalMaxPool(nn.Module):
         self.dim = dim
 
     def forward(self, x):
-        return x.max(dim=self.dim)[0]
+        return torch.max(x, dim=self.dim)[0]
