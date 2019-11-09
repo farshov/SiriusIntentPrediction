@@ -22,19 +22,20 @@ class Content(FeatureExtractor):
         self.vectorizer.fit(dialogues_tr)
         return self.transform(data)
 
-    def transform(self, dialogues):
+    def transform(self, data):
         """
         :param dialogues: list of lists of tuple(sender, strs)
         :return: pd.DataFrame
         """
-        dialogues = [[phrase[1].translate(self.table).lower() for phrase in dialog] for dialog in dialogues]
+        dialogues = [[phrase[1].translate(self.table).lower() for phrase in dialog] for dialog in data]
         features = []
         for i, dialog in enumerate(dialogues):
-            dialog = self.vectorizer.transform(dialog)
-            for j in range(dialog.shape[0]):
-                similarity = cosine_similarity(dialog[0], dialog[j])[0][0]
-                dialog_similarity = cosine_similarity(np.sum(dialog, axis=0), dialog[j])[0][0]
-                features.append([similarity] + [dialog_similarity] + [self.contains_question_mark(dialogues[i][j])]
+            dialogue = self.vectorizer.transform(dialog).toarray()
+            for j in range(dialogue.shape[0]):
+                similarity = cosine_similarity([dialogue[0]], [dialogue[j]])[0][0]
+
+                dialog_similarity = cosine_similarity([np.sum(np.delete(dialogue, j, 0), axis=0)], [dialogue[j]])[0][0]
+                features.append([similarity] + [dialog_similarity] + [self.contains_question_mark(data[i][j])]
                                 + [self.duplicate(dialogues[i][j])] + self.get5w1h(dialogues[i][j]))
 
         features = pd.DataFrame(features, columns=['initial_utterance_similarity', 'dialog_similarity',
@@ -44,7 +45,7 @@ class Content(FeatureExtractor):
 
     @staticmethod
     def contains_question_mark(phrase):
-        return 1 if '?' in phrase else 0
+        return 1 if '?' in phrase[1] else 0
 
     def duplicate(self, phrase):
         """
