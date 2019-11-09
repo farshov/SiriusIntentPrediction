@@ -45,7 +45,7 @@ class Structural(FeatureExtractor):
         for dialogue in data:
             abs_feature += [(i+1) for i in range(len(dialogue))]
             frac = 1/len(dialogue)
-            norm_feature += [abs_feature[i]*frac for i in range(len(dialogue))]
+            norm_feature += [i*frac for i in range(len(dialogue))]
 
             utter_len = []
             is_starter = []
