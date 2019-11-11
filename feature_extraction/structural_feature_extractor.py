@@ -1,15 +1,18 @@
 import nltk
 import pandas as pd
-from nltk.stem.snowball import SnowballStemmer
+from nltk.stem import PorterStemmer
 from feature_extraction.feature_extractor import FeatureExtractor
 from collections import Counter
 
+def tokenizer(utter):
+    pattern = re.compile(r"(?u)\b\w\w+\b")
+    return pattern.findall(utter)
 
 class Structural(FeatureExtractor):
     def __init__(self):
         super().__init__()
         self.stops = nltk.corpus.stopwords.words('english')
-        self.stemmer = SnowballStemmer("english")
+        self.stemmer = PorterStemmer()
         self.tf_idf_dict = {}
 
     def get_cosine_similarity_two_utters(self, first_utter, second_utter):
