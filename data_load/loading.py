@@ -117,3 +117,14 @@ def preprocess_labels(labels, labels_dict):
             vector[num] = 1
         res.append(vector)
     return res
+
+
+def init_tf_idf_dict(idf_file):
+    term_to_idf_dict = {}
+
+    with open(idf_file, encoding='utf-8') as fin:
+        for line in fin:
+            tokens = line.split('\t')
+            term_to_idf_dict[tokens[0]] = float(tokens[1].strip('\n'))
+
+    return term_to_idf_dict
