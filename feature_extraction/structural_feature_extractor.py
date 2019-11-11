@@ -2,6 +2,7 @@ import nltk
 import pandas as pd
 from nltk.stem.snowball import SnowballStemmer
 from feature_extraction.feature_extractor import FeatureExtractor
+from collections import Counter
 
 
 class Structural(FeatureExtractor):
@@ -9,6 +10,24 @@ class Structural(FeatureExtractor):
         super().__init__()
         self.stops = nltk.corpus.stopwords.words('english')
         self.stemmer = SnowballStemmer("english")
+        self.tf_idf_dict = {}
+
+    def get_cosine_similarity_two_utters(self, first_utter, second_utter):
+        first_term_freq = Counter(first_utter)
+        second_term_freq = Counter(second_utter)
+        first_norm = 0.0
+        second_norm = 0.0
+        dot_product = 0.0
+        for word, count in first_term_freq.items():
+            idf = self.tf_idf_dict[word]
+            first_norm += pow(count * idf, 2)
+            if word in second_term_freq.keys():
+                dot_product += count * second_term_freq[word] * pow(idf, 2)
+        for word, count in second_term_freq.items():
+            idf = self.tf_idf_dict[word]
+            second_norm += pow(count * idf, 2)
+        similarity = float(dot_product) / (pow(first_norm, 0.5) * pow(second_norm, 0.5))
+
 
     def remove_stop_words(self, utterance):
         """
