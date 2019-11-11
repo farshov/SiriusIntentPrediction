@@ -3,12 +3,32 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from feature_extraction.feature_extractor import FeatureExtractor
+from data_load.loading import init_tf_idf_dict
+from collections import Counter
 
 
 class Content(FeatureExtractor):
     def __init__(self):
         super().__init__()
         self.vectorizer = TfidfVectorizer()
+        self.tf_idf_dict = init_tf_idf_dict("data/msdialogue/idf.tsv")
+
+    def get_cosine_similarity_two_utters(self, first_utter, second_utter):
+        first_term_freq = Counter(first_utter)
+        second_term_freq = Counter(second_utter)
+        first_norm = 0.0
+        second_norm = 0.0
+        dot_product = 0.0
+        for word, count in first_term_freq.items():
+            idf = self.tf_idf_dict[word]
+            first_norm += pow(count * idf, 2)
+            if word in second_term_freq.keys():
+                dot_product += count * second_term_freq[word] * pow(idf, 2)
+        for word, count in second_term_freq.items():
+            idf = self.tf_idf_dict[word]
+            second_norm += pow(count * idf, 2)
+        similarity = float(dot_product) / (pow(first_norm, 0.5) * pow(second_norm, 0.5))
+        return similarity
 
     def extract_features(self, data):
         """
@@ -32,9 +52,11 @@ class Content(FeatureExtractor):
         for i, dialog in enumerate(dialogues):
             dialogue = self.vectorizer.transform(dialog).toarray()
             for j in range(dialogue.shape[0]):
-                similarity = cosine_similarity([dialogue[0]], [dialogue[j]])[0][0]
+                similarity = self.get_cosine_similarity_two_utters(dialog[0], [dialog[j]])
 
-                dialog_similarity = cosine_similarity([np.sum(np.delete(dialogue, j, 0), axis=0)], [dialogue[j]])[0][0]
+                dialog_no_utter = [word for word in phrase for phrase in list(np.delete(dialog, j, 0))]
+                dialog_similarity = self.get_cosine_similarity_two_utters(dialog_no_utter,
+                                                                          dialogue[j])
                 features.append([similarity] + [dialog_similarity] + [self.contains_question_mark(data[i][j])]
                                 + [self.duplicate(dialogues[i][j])] + self.get5w1h(dialogues[i][j]))
 
