@@ -13,6 +13,9 @@ import gensim
 import pandas as pd
 import numpy as np
 from quality_metrics.quality_metrics import get_accuracy, get_f1
+from gensim.test.utils import datapath, get_tmpfile
+from gensim.models import KeyedVectors
+from gensim.scripts.glove2word2vec import glove2word2vec
 
 import os, sys, inspect
 # current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -23,11 +26,12 @@ import os, sys, inspect
 from data_load.loading import load_from_json
 
 MAX_SEQ_LEN = 800
-N_EPOCHS = 30
-SAVE_PATH = 'BaseCNNmsdialog'
+N_EPOCHS = 15
+SAVE_PATH = 'BaseCNNbase'
 
 
-def main(emb_path='GoogleNews-vectors-negative300.bin.gz', data_path='data/msdialogue/'):
+# def main(emb_path='GoogleNews-vectors-negative300.bin.gz', data_path='data/msdialogue/'):
+def main(emb_path='glove.6B.100d.txt', data_path='data/msdialogue/'):
     device = 'cpu'
     if torch.cuda.is_available():
         device = 'cuda'
@@ -56,9 +60,13 @@ def main(emb_path='GoogleNews-vectors-negative300.bin.gz', data_path='data/msdia
     # for i in range(len(X)):
     #     for j in range(len(X[i])):
     #         X_train.append(X[i][j])
-    
     print('Building Embedding')
-    word2vec = gensim.models.KeyedVectors.load_word2vec_format(emb_path) # , binary=True)
+    if emb_path == 'glove.6B.100d.txt':
+        tmp_file = get_tmpfile("test_word2vec.txt")
+        _ = glove2word2vec(emb_path, tmp_file)
+        word2vec = KeyedVectors.load_word2vec_format(tmp_file)
+    else:
+        word2vec = gensim.models.KeyedVectors.load_word2vec_format(emb_path, binary=True)
     EMB_DIM = word2vec.vectors.shape[1]
     word2vec.add('<UNK>', np.mean(word2vec.vectors.astype('float32'), axis=0))
     word2vec.add('<PAD>', np.array(np.zeros(EMB_DIM)))
@@ -104,6 +112,8 @@ def main(emb_path='GoogleNews-vectors-negative300.bin.gz', data_path='data/msdia
 #         X, y = X.to(device), y.to(device)
 #         break
     for ep in range(N_EPOCHS):
+        if ep == 10:
+            optimizer = Adam(model.parameters(), lr=0.0001, betas=(0.9, 0.999), eps=1e-08)
         print(f'epoch: {ep}')
 #         j = 0
 #         # model.train() 

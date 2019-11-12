@@ -31,12 +31,14 @@ class Vocab:
         :param corpus: list of strs containing sentenses
         :return:
         """
+        filters = set('!"#$%&()\'\"\*+,-./:;<=>?@[\\]^_`{|}~\t\n')
         tok_corp = list()
         tok_corp.append(torch.zeros(max_len))
         for sent in corpus:
             tok_sent = []
             for word in sent.split(' '):
-                tok_sent.append(self.word2index.get(word, self.word2index["<UNK>"]))
+                if word not in filters:
+                    tok_sent.append(self.word2index.get(word, self.word2index["<UNK>"]))
             tok_corp.append(torch.tensor(tok_sent))
         return tok_corp
 
